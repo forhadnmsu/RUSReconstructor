@@ -5,15 +5,11 @@
 
 R__LOAD_LIBRARY(libdimu_ana_rus)
 R__LOAD_LIBRARY(libfun4all)
-R__LOAD_LIBRARY(libg4detectors)
-R__LOAD_LIBRARY(libg4testbench)
-R__LOAD_LIBRARY(libg4eval)
-R__LOAD_LIBRARY(libg4dst)
 R__LOAD_LIBRARY(libdptrigger)
 R__LOAD_LIBRARY(libembedding)
 R__LOAD_LIBRARY(libevt_filter)
 R__LOAD_LIBRARY(libktracker)
-R__LOAD_LIBRARY(libcalibrator)
+R__LOAD_LIBRARY(fun4all_rus_file_manager)
 
 int Fun4RecoTest(const int nevent = 10){
 
@@ -48,49 +44,9 @@ int Fun4RecoTest(const int nevent = 10){
     Fun4AllServer* se = Fun4AllServer::instance();
     se->setRun(5433);
 
-
-    CalibDriftDist* cal_dd = new CalibDriftDist();
-    se->registerSubsystem(cal_dd);
-
-    // Fun4All G4 module
-    PHG4Reco *g4Reco = new PHG4Reco();
-    //PHG4Reco::G4Seed(123);
-    g4Reco->set_field_map();
-    // size of the world - every detector has to fit in here
-    g4Reco->SetWorldSizeX(1000);
-    g4Reco->SetWorldSizeY(1000);
-    g4Reco->SetWorldSizeZ(5000);
-    // shape of our world - it is a tube
-    g4Reco->SetWorldShape("G4BOX");
-    // this is what our world is filled with
-    g4Reco->SetWorldMaterial("G4_AIR"); //G4_Galactic, G4_AIR
-    // Geant4 Physics list to use
-    g4Reco->SetPhysicsList("FTFP_BERT");
-
-    // insensitive elements of the spectrometer
-    SetupInsensitiveVolumes(g4Reco, do_e1039_shielding, do_fmag, do_kmag, do_absorber);
-
-    // collimator, targer and shielding between target and FMag
-    SetupBeamline(g4Reco, do_collimator, target_coil_pos_z - 302.36); // Is the position correct??
-
-
-    if (do_target) {
-        SetupTarget(g4Reco, target_coil_pos_z, target_l, target_z, use_g4steps);
-    }
-
-    // sensitive elements of the spectrometer
-    SetupSensitiveDetectors(g4Reco, do_dphodo, do_station1DC);
-
-    se->registerSubsystem(g4Reco);
-
-
-    // digitizer
-    SQDigitizer *digitizer = new SQDigitizer("DPDigitizer", 0);
-    //digitizer->Verbosity(99);
-    digitizer->set_enable_st1dc(do_station1DC);    // these two lines need to be in sync with the parameters used
-    digitizer->set_enable_dphodo(do_dphodo);       // in the SetupSensitiveVolumes() function call above
-    se->registerSubsystem(digitizer);
-
+    CalibHitElementPos* cal_ele_pos = new CalibHitElementPos();
+    cal_ele_pos->CalibTriggerHit(false);
+    se->registerSubsystem(cal_ele_pos);
 
     SQReco* reco = new SQReco();
     reco->Verbosity(1);
@@ -109,16 +65,11 @@ int Fun4RecoTest(const int nevent = 10){
     vtx->Verbosity(100);
     se->registerSubsystem(vtx);
 
-    Fun4AllInputManager *in_ = new Fun4AllDummyInputManager("DUMMY");
-    se->registerInputManager(in_);
-
     Fun4AllRUSInputManager* in = new Fun4AllRUSInputManager("VectIn");
-    //in->Verbosity(99);
+    in->Verbosity(99);
     in->set_tree_name("tree");
     in->fileopen("RUS_DY.root");
     se->registerInputManager(in);
-
-
 
     //Fun4AllRUSOutputManager* tree = new Fun4AllRUSOutputManager();
     //tree->SetTreeName("tree");
