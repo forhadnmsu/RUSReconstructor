@@ -62,13 +62,14 @@ int Fun4RecoTest(const int nevent = 10){
     se->registerSubsystem(reco);
 
     SQVertexing* vtx = new SQVertexing();
-    vtx->Verbosity(100);
+    //vtx->Verbosity(100);
     se->registerSubsystem(vtx);
 
     Fun4AllRUSInputManager* in = new Fun4AllRUSInputManager("VectIn");
     in->Verbosity(99);
     in->set_tree_name("tree");
-    in->fileopen("RUS_DY.root");
+    in->fileopen("geny2.root");
+    //in->fileopen("/seaquest/users/mhossain/DimuAnaRUS/mc_gen_comb/RUS.root");
     se->registerInputManager(in);
 
     //Fun4AllRUSOutputManager* tree = new Fun4AllRUSOutputManager();
@@ -76,12 +77,22 @@ int Fun4RecoTest(const int nevent = 10){
     //tree->SetFileName("RUS.root");
     //se->registerOutputManager(tree);
 
-
     // DST output manager
     Fun4AllDstOutputManager *out = new Fun4AllDstOutputManager("DSTOUT", "DST.root");
     se->registerOutputManager(out);
 
-    se->run(20);
+
+	DimuAnaRUS* dimuAna = new DimuAnaRUS();
+    dimuAna->SetTreeName("tree");
+	dimuAna->SetMCTrueMode(false);
+    dimuAna->SetOutputFileName("RUS_test.root");
+    dimuAna->SetSaveOnlyDimuon(true);
+    dimuAna->SetRecoMode(true);
+    dimuAna->SetRecoDimuMode(true);
+    dimuAna->EnableSQHit(false);
+    se->registerSubsystem(dimuAna);
+
+    se->run();
     se->End();
     delete se;
     exit(0); //return 0;
